@@ -1,0 +1,10 @@
+{
+  "files": {
+    "main.js": "/extractinfo/static/js/main.75295e2f.js",
+    "index.html": "/extractinfo/index.html",
+    "main.75295e2f.js.map": "/extractinfo/static/js/main.75295e2f.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.75295e2f.js"
+  ]
+}
