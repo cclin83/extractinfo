@@ -30,3 +30,42 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动提供的安全令牌
         publish_dir: ./build # 指定要发布到 Pages 的文件夹（就是 npm run build 生成的）
         publish_branch: gh-pages # 指定发布到的分支（GitHub Pages 会从这里读取文件）
+
+提交工作流文件：
+
+在页面右上角，点击绿色的 "Commit changes..." (提交更改...) 按钮。
+
+输入一个提交信息（例如：“Add GitHub Actions for Pages deployment”）。
+
+选择 "Commit directly to the main branch" (直接提交到 main 分支)。
+
+点击绿色的 "Commit changes" (提交更改)。
+
+简单来说： 在 GitHub 仓库里，找到 Actions 选项卡，创建一个新文件 .github/workflows/deploy.yml，把上面提供的代码粘贴进去并提交。
+
+步骤 2：修改项目里的一个文件 (package.json)
+这个文件告诉您的项目如何运行和部署。
+
+在 GitHub 上编辑 package.json 文件：
+
+回到您的 GitHub 仓库页面。
+
+在文件列表中找到 package.json 文件并点击它。
+
+点击文件内容右上角的铅笔图标（"Edit this file"）来编辑它。
+
+添加一行网站地址：
+
+在文件里找到 "name": "..." 这一行（或者类似的一行），在它下面紧接着添加一行 homepage。
+
+重要： 请把 <你的用户名> 替换成你的 GitHub 用户名，把 <你的仓库名> 替换成你 GitHub 仓库的名称。
+
+注意逗号： 确保这行末尾有逗号 ,。
+
+{
+  "name": "你的仓库名",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://<你的用户名>.github.io/<你的仓库名>",
+  // ... 其他字段
+}
