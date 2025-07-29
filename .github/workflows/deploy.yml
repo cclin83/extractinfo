@@ -1,0 +1,32 @@
+name: Deploy React App to GitHub Pages # 工作流的名称
+
+on:
+  push:
+    branches:
+      - main # 当代码推送到 main 分支时触发此工作流
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # 在 Ubuntu 系统上运行此任务
+
+    steps:
+    - name: Checkout code # 步骤1：拉取您的代码
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js # 步骤2：设置 Node.js 环境
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18' # 使用 Node.js 18 LTS 版本
+
+    - name: Install dependencies # 步骤3：安装项目依赖
+      run: npm install
+
+    - name: Build React App # 步骤4：构建 React 应用（生成静态文件）
+      run: npm run build
+
+    - name: Deploy to GitHub Pages # 步骤5：部署到 GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4 # 使用一个流行的 GitHub Action 来部署
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动提供的安全令牌
+        publish_dir: ./build # 指定要发布到 Pages 的文件夹（就是 npm run build 生成的）
+        publish_branch: gh-pages # 指定发布到的分支（GitHub Pages 会从这里读取文件）
