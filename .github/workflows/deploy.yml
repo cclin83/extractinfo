@@ -8,6 +8,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions: # 新增权限配置
+      contents: write # 允许写入仓库内容
+      pages: write    # 允许管理 GitHub Pages 部署
+      id-token: write # 允许获取 OIDC ID Token (对于 Pages 部署有时需要)
 
     steps:
     - name: Checkout code
