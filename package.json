@@ -1,5 +1,7 @@
 {
-  "name": "react-typescript",
+  "name": "extractinfo",
+   "homepage": "https://<cclin83>.github.io/<extractinfo>", // <-- 添加这一行
+  // ... 其他字段
   "version": "1.0.0",
   "description": "React and TypeScript example starter project",
   "keywords": [
