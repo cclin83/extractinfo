@@ -1,55 +1,65 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from 'react';
+
+// Define types for the extracted data structure
+interface ExtractedFields {
+  [key: string]: string; // All extracted fields are strings (or HTML strings)
+}
+
+interface ClinicalTrialData {
+  fileName: string;
+  fields: ExtractedFields;
+}
 
 // Main App component
 function App() {
   // State to store the extracted data.
   // It will be an array of objects, where each object represents a file's data.
   // Each object will have a 'fileName' and a 'fields' object containing the extracted key-value pairs.
-  const [extractedData, setExtractedData] = useState([]);
+  const [extractedData, setExtractedData] = useState<ClinicalTrialData[]>([]);
   // State for loading indicator
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   // State for error messages
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>('');
   // State for selected fields to display in the table
-  const [selectedFields, setSelectedFields] = useState([]);
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
   // State to store the names of the files currently selected by the user
-  const [selectedFileNames, setSelectedFileNames] = useState([]);
+  const [selectedFileNames, setSelectedFileNames] = useState<string[]>([]);
 
   // Define all possible fields (row headers in the new transposed view)
-  const allFields = [
-    "Reference",
-    "MOA",
-    "Molecule/Intervention Route",
-    "Phase",
-    "Sample Size",
-    "Treatment Arms",
-    "Background Therapy",
-    "Duration",
-    "Inclusion Criteria",
-    "Age",
-    "BMI",
-    "T2DM Included?",
-    "T2DM Definition",
-    "Established CVD Definition",
-    "CKD Included?",
-    "CKD Definition",
-    "HFpEF Included?",
-    "HFpEF Definition",
-    "Exclusion Criteria",
-    "T2DM and/or T1DM excluded?",
-    "History of CV events definition and timing for exclusion",
-    "Con med exclusion: definition and timing?",
-    "Uncontrolled HTN, BP cutoffs",
-    "NYHA class",
-    "Liver disease",
-    "CKD eGFR cutoff, dialysis or kidney transplant",
-    "Primary Endpoint",
-    "Key Secondary Endpoints",
-    "Other Secondary Endpoints",
-    "Exploratory Endpoints",
-    "Substudies (if available)",
-    "Notes/Comments",
-    "Study ID",
+  const allFields: string[] = [
+    'Reference',
+    'MOA',
+    'Molecule/Intervention Route',
+    'Phase',
+    'Sample Size',
+    'Treatment Arms',
+    'Background Therapy',
+    'Duration',
+    'Inclusion Criteria',
+    'Age',
+    'BMI',
+    'T2DM Included?',
+    'T2DM Definition',
+    'Established CVD Definition',
+    'CKD Included?',
+    'CKD Definition',
+    'HFpEF Included?',
+    'HFpEF Definition',
+    'Exclusion Criteria',
+    'T2DM and/or T1DM excluded?',
+    'History of CV events definition and timing for exclusion',
+    'Con med exclusion: definition and timing?',
+    'Uncontrolled HTN, BP cutoffs',
+    'NYHA class',
+    'Liver disease',
+    'CKD eGFR cutoff, dialysis or kidney transplant',
+    'Primary Endpoint',
+    'Key Secondary Endpoints',
+    'Other Secondary Endpoints',
+    'Exploratory Endpoints',
+    'Substudies (if available)',
+    'Notes/Comments',
+    'Study ID'
   ];
 
   // Initialize selectedFields with allFields when the component mounts
@@ -58,7 +68,7 @@ function App() {
   }, []); // Empty dependency array means this runs once on mount
 
   // Function to extract specific fields from a single JSON object
-  const extractInfo = useCallback((jsonData) => {
+  const extractInfo = useCallback((jsonData: any): ExtractedFields => { // jsonData type is 'any' for flexibility with unknown JSON structures
     const protocolSection = jsonData?.protocolSection;
     if (!protocolSection) {
       console.warn("JSON file is missing 'protocolSection'.");
@@ -76,281 +86,134 @@ function App() {
     const derivedSection = jsonData?.derivedSection;
 
     // Helper to safely get text from a path, returning empty string if not found
-    const getSafeText = (path, defaultValue = "") => {
-      let current = jsonData;
-      for (const key of path.split(".")) {
+    const getSafeText = (path: string, defaultValue: string = ''): string => {
+      let current: any = jsonData; // current can be of any type as we traverse the JSON
+      for (const key of path.split('.')) {
         if (current === undefined || current === null) {
           return defaultValue;
         }
         current = current[key];
       }
-      return current !== undefined && current !== null
-        ? String(current)
-        : defaultValue;
+      return current !== undefined && current !== null ? String(current) : defaultValue;
     };
 
     // Helper to format intervention details
-    const formatInterventions = (arms) => {
-      if (!arms || arms.length === 0) return "";
-      return arms
-        .map((arm) => {
-          const name = arm.label || "N/A";
-          const description = arm.description || "";
-          const interventions = arm.interventionNames
-            ? arm.interventionNames
-                .map((i) => i.replace("Drug: ", ""))
-                .join(", ")
-            : "N/A";
-          return `- **${name}**: ${description} (Interventions: ${interventions})`;
-        })
-        .join("<br>");
+    const formatInterventions = (arms: any[]): string => { // arms is an array of unknown objects
+      if (!arms || arms.length === 0) return '';
+      return arms.map((arm: any) => { // arm is an unknown object
+        const name = arm.label || 'N/A';
+        const description = arm.description || '';
+        const interventions = arm.interventionNames ? arm.interventionNames.map((i: string) => i.replace('Drug: ', '')).join(', ') : 'N/A';
+        return `- **${name}**: ${description} (Interventions: ${interventions})`;
+      }).join('<br>');
     };
 
     // Helper to format outcome measures
-    const formatOutcomes = (outcomes) => {
-      if (!outcomes || outcomes.length === 0) return "";
-      return outcomes
-        .map(
-          (outcome) =>
-            `- **${outcome.title || "N/A"}**: ${
-              outcome.description || "N/A"
-            } (Time Frame: ${outcome.timeFrame || "N/A"})`
-        )
-        .join("<br>");
+    const formatOutcomes = (outcomes: any[]): string => { // outcomes is an array of unknown objects
+      if (!outcomes || outcomes.length === 0) return '';
+      return outcomes.map((outcome: any) => `- **${outcome.title || 'N/A'}**: ${outcome.description || 'N/A'} (Time Frame: ${outcome.timeFrame || 'N/A'})`).join('<br>');
     };
 
-    const inclusionCriteriaText = eligibilityModule?.eligibilityCriteria || "";
-    const exclusionCriteriaText = eligibilityModule?.eligibilityCriteria || ""; // Same source, will parse specific parts
+    const inclusionCriteriaText = eligibilityModule?.eligibilityCriteria || '';
+    const exclusionCriteriaText = eligibilityModule?.eligibilityCriteria || ''; // Same source, will parse specific parts
 
     // Improved MOA extraction logic
-    let moa = "Not explicitly stated";
+    let moa: string = 'Not explicitly stated';
     if (derivedSection?.interventionBrowseModule?.meshTerms?.length > 0) {
       // Prioritize Mesh Terms if available
-      moa = derivedSection.interventionBrowseModule.meshTerms
-        .map((term) => term.term)
-        .join(", ");
-    } else if (
-      derivedSection?.interventionBrowseModule?.ancestors?.length > 0
-    ) {
+      moa = derivedSection.interventionBrowseModule.meshTerms.map((term: any) => term.term).join(', ');
+    } else if (derivedSection?.interventionBrowseModule?.ancestors?.length > 0) {
       // Fallback to ancestors if Mesh Terms are not available
-      moa = derivedSection.interventionBrowseModule.ancestors
-        .map((ancestor) => ancestor.term)
-        .join(", ");
+      moa = derivedSection.interventionBrowseModule.ancestors.map((ancestor: any) => ancestor.term).join(', ');
     }
 
     // Extract Exploratory Endpoints
-    const exploratoryEndpoints =
-      outcomesModule?.exploratoryOutcomes?.length > 0
-        ? formatOutcomes(outcomesModule.exploratoryOutcomes)
-        : "Not explicitly listed in the provided data.";
+    const exploratoryEndpoints = outcomesModule?.exploratoryOutcomes?.length > 0
+      ? formatOutcomes(outcomesModule.exploratoryOutcomes)
+      : 'Not explicitly listed in the provided data.';
 
     // Extract Substudies
-    const substudies =
-      designModule?.substudies?.length > 0
-        ? designModule.substudies
-            .map(
-              (sub) =>
-                `- **${sub.title || "N/A"}**: ${sub.description || "N/A"}`
-            )
-            .join("<br>")
-        : "Not explicitly listed in the provided data.";
+    const substudies = designModule?.substudies?.length > 0
+      ? designModule.substudies.map((sub: any) => `- **${sub.title || 'N/A'}**: ${sub.description || 'N/A'}`).join('<br>')
+      : 'Not explicitly listed in the provided data.';
 
-    const extractedFields = {
-      Reference: identificationModule?.nctId || "",
-      MOA: moa, // Updated MOA extraction
-      "Molecule/Intervention Route":
-        armsInterventionsModule?.interventions?.[0]?.name &&
-        armsInterventionsModule?.interventions?.[0]?.description
-          ? `${armsInterventionsModule.interventions[0].name}, ${
-              armsInterventionsModule.interventions[0].description.split(".")[0]
-            }`
-          : "",
-      Phase: designModule?.phases?.[0] || "",
-      "Sample Size": designModule?.enrollmentInfo?.count || "",
-      "Treatment Arms": formatInterventions(armsInterventionsModule?.armGroups),
-      "Background Therapy": descriptionModule?.briefSummary?.includes(
-        "add-on to the standard-of-care treatment"
-      )
-        ? "Add-on to standard-of-care treatment."
-        : "Not explicitly stated.",
-      Duration:
-        getSafeText("statusModule.completionDateStruct.date") &&
-        getSafeText("statusModule.startDateStruct.date")
-          ? `From ${getSafeText(
-              "statusModule.startDateStruct.date"
-            )} to ${getSafeText("statusModule.completionDateStruct.date")}`
-          : getSafeText("descriptionModule.briefSummary")?.match(
-              /The study will last for about ([\d\.-]+ to [\d\.-]+ years)/
-            )?.[1] ||
-            getSafeText("descriptionModule.briefSummary")?.match(
-              /The trial duration is approximately ([\d\.-]+ to [\d\.-]+ years)/
-            )?.[1] ||
-            getSafeText("descriptionModule.briefSummary")?.match(
-              /The study will last for about ([\d\.-]+ to [\d\.-]+ months)/
-            )?.[1] ||
-            getSafeText("outcomesModule.primaryOutcomes.0.timeFrame")
-              ?.replace("Approximate Maximum ", "")
-              .replace("Months", " months") ||
-            getSafeText("descriptionModule.briefSummary")?.match(
-              /up to max\. (\d+ weeks)/
-            )?.[1] ||
-            "",
-      "Inclusion Criteria": inclusionCriteriaText
-        .split("Exclusion Criteria:")[0]
-        .replace("Inclusion Criteria:\n\n", "")
-        .replace(/\n\* /g, "<br>- ")
-        .trim(),
-      Age: eligibilityModule?.minimumAge || "",
-      BMI:
-        eligibilityModule?.eligibilityCriteria?.match(
-          /Body mass index \(BMI\) ([^\n]+)/
-        )?.[1] || "Not explicitly mentioned.",
-      "T2DM Included?":
-        protocolSection?.conditionsModule?.conditions?.includes(
-          "Diabetes Mellitus, Type 2"
-        ) || inclusionCriteriaText.includes("type 2 diabetes mellitus")
-          ? "Yes"
-          : "No",
-      "T2DM Definition":
-        protocolSection?.conditionsModule?.conditions?.includes(
-          "Diabetes Mellitus, Type 2"
-        ) || inclusionCriteriaText.includes("type 2 diabetes mellitus")
-          ? "Type 2 diabetes mellitus"
-          : "Not applicable",
-      "Established CVD Definition":
-        inclusionCriteriaText.match(
-          /Have established cardiovascular \(CV\) disease as evidenced by ([^\n]+)/
-        )?.[1] ||
-        inclusionCriteriaText.match(
-          /clinical evidence of cardiovascular disease or age above or equal to 60 years at screening and subclinical evidence of cardiovascular disease/
-        )?.[0] ||
-        "Not explicitly stated.",
-      "CKD Included?": inclusionCriteriaText.includes(
-        "Chronic kidney disease defined as:"
-      )
-        ? "Yes"
-        : "Not explicitly stated.",
-      "CKD Definition":
-        inclusionCriteriaText.match(
-          /Chronic kidney disease defined as: ([^\n]+)/
-        )?.[1] || "Not explicitly stated.",
-      "HFpEF Included?": inclusionCriteriaText.includes(
-        "Heart failure with preserved ejection fraction (HFpEF)"
-      )
-        ? "Yes"
-        : "Not explicitly stated.",
-      "HFpEF Definition":
-        inclusionCriteriaText.match(
-          /Heart failure with preserved ejection fraction \(HFpEF\) defined as: ([^\n]+)/
-        )?.[1] || "Not explicitly stated.",
-      "Exclusion Criteria":
-        exclusionCriteriaText
-          .split("Exclusion Criteria:")[1]
-          ?.replace(/\n\* /g, "<br>- ")
-          .trim() || "",
-      "T2DM and/or T1DM excluded?": exclusionCriteriaText.includes(
-        "Type 1 diabetes mellitus"
-      )
-        ? "Type 1 diabetes mellitus excluded."
-        : exclusionCriteriaText.includes("History of type 1 or type 2 diabetes")
-        ? "History of type 1 or type 2 diabetes excluded."
-        : "Not explicitly stated.",
-      "History of CV events definition and timing for exclusion":
-        exclusionCriteriaText.match(
-          /Any of the following: myocardial infarction, stroke, hospitalisation for unstable angina pectoris or transient ischaemic attack within the past (\d+ days) prior to the day of screening/
-        )?.[0] ||
-        exclusionCriteriaText.match(
-          /Acute coronary or cerebro-vascular event within (\d+ days) prior to randomisation/
-        )?.[0] ||
-        "Not explicitly stated.",
-      "Con med exclusion: definition and timing?":
-        exclusionCriteriaText
-          .match(
-            /Treatment with (any glucagon-like peptide-1 receptor agonist|glucose-lowering agents|any dipeptidyl peptidase 4 \(DPP-IV\) inhibitor) within (\d+ days) before screening/g
-          )
-          ?.join("<br>") || "Not explicitly stated.",
-      "Uncontrolled HTN, BP cutoffs":
-        exclusionCriteriaText.match(
-          /Uncontrolled hypertension defined as systolic blood pressure >(\d+) mmHg or diastolic blood pressure >(\d+) mmHg/
-        )?.[0] || "Not explicitly mentioned.",
-      "NYHA class":
-        exclusionCriteriaText.match(
-          /Chronic heart failure New York Heart Association \(NYHA\) class IV/
-        )?.[0] ||
-        exclusionCriteriaText.match(
-          /Presently classified as being in New York Heart Association \(NYHA\) Class IV heart failure/
-        )?.[0] ||
-        "Not explicitly stated.",
-      "Liver disease":
-        exclusionCriteriaText.includes(
-          "History or presence of chronic pancreatitis"
-        ) ||
-        exclusionCriteriaText.includes(
-          "Presence of acute pancreatitis within the past 180 days"
-        )
-          ? "History or presence of chronic pancreatitis and/or acute pancreatitis within the past 180 days prior to screening."
-          : "Not explicitly stated.",
-      "CKD eGFR cutoff, dialysis or kidney transplant":
-        exclusionCriteriaText.includes(
-          "End stage renal disease or chronic or intermittent haemodialysis or peritoneal dialysis"
-        )
-          ? "End stage renal disease or chronic or intermittent haemodialysis or peritoneal dialysis is an exclusion criterion."
-          : "Not explicitly stated.",
-      "Primary Endpoint": outcomesModule?.primaryOutcomes?.[0]?.title || "",
+
+    const extractedFields: ExtractedFields = {
+      'Reference': identificationModule?.nctId || '',
+      'MOA': moa, // Updated MOA extraction
+      'Molecule/Intervention Route': armsInterventionsModule?.interventions?.[0]?.name && armsInterventionsModule?.interventions?.[0]?.description ?
+        `${armsInterventionsModule.interventions[0].name}, ${armsInterventionsModule.interventions[0].description.split('.')[0]}` : '',
+      'Phase': designModule?.phases?.[0] || '',
+      'Sample Size': String(designModule?.enrollmentInfo?.count || ''), // Ensure string type
+      'Treatment Arms': formatInterventions(armsInterventionsModule?.armGroups),
+      'Background Therapy': descriptionModule?.briefSummary?.includes('add-on to the standard-of-care treatment') ? 'Add-on to standard-of-care treatment.' : 'Not explicitly stated.',
+      'Duration': getSafeText('statusModule.completionDateStruct.date') && getSafeText('statusModule.startDateStruct.date') ?
+        `From ${getSafeText('statusModule.startDateStruct.date')} to ${getSafeText('statusModule.completionDateStruct.date')}` :
+        getSafeText('descriptionModule.briefSummary')?.match(/The study will last for about ([\d\.-]+ to [\d\.-]+ years)/)?.[1] ||
+        getSafeText('descriptionModule.briefSummary')?.match(/The trial duration is approximately ([\d\.-]+ to [\d\.-]+ years)/)?.[1] ||
+        getSafeText('descriptionModule.briefSummary')?.match(/The study will last for about ([\d\.-]+ to [\d\.-]+ months)/)?.[1] ||
+        getSafeText('outcomesModule.primaryOutcomes.0.timeFrame')?.replace('Approximate Maximum ', '').replace('Months', ' months') ||
+        getSafeText('descriptionModule.briefSummary')?.match(/up to max\. (\d+ weeks)/)?.[1] || '',
+      'Inclusion Criteria': inclusionCriteriaText.split('Exclusion Criteria:')[0].replace('Inclusion Criteria:\n\n', '').replace(/\n\* /g, '<br>- ').trim(),
+      'Age': getSafeText('eligibilityModule.minimumAge') || '', // Ensure string type
+      'BMI': eligibilityModule?.eligibilityCriteria?.match(/Body mass index \(BMI\) ([^\n]+)/)?.[1] || 'Not explicitly mentioned.',
+      'T2DM Included?': (protocolSection?.conditionsModule?.conditions?.includes('Diabetes Mellitus, Type 2') || inclusionCriteriaText.includes('type 2 diabetes mellitus')) ? 'Yes' : 'No',
+      'T2DM Definition': (protocolSection?.conditionsModule?.conditions?.includes('Diabetes Mellitus, Type 2') || inclusionCriteriaText.includes('type 2 diabetes mellitus')) ? 'Type 2 diabetes mellitus' : 'Not applicable',
+      'Established CVD Definition': inclusionCriteriaText.match(/Have established cardiovascular \(CV\) disease as evidenced by ([^\n]+)/)?.[1] ||
+                                    inclusionCriteriaText.match(/clinical evidence of cardiovascular disease or age above or equal to 60 years at screening and subclinical evidence of cardiovascular disease/)?.[0] || 'Not explicitly stated.',
+      'CKD Included?': inclusionCriteriaText.includes('Chronic kidney disease defined as:') ? 'Yes' : 'Not explicitly stated.',
+      'CKD Definition': inclusionCriteriaText.match(/Chronic kidney disease defined as: ([^\n]+)/)?.[1] || 'Not explicitly stated.',
+      'HFpEF Included?': inclusionCriteriaText.includes('Heart failure with preserved ejection fraction (HFpEF)') ? 'Yes' : 'Not explicitly stated.',
+      'HFpEF Definition': inclusionCriteriaText.match(/Heart failure with preserved ejection fraction \(HFpEF\) defined as: ([^\n]+)/)?.[1] || 'Not explicitly stated.',
+      'Exclusion Criteria': exclusionCriteriaText.split('Exclusion Criteria:')[1]?.replace(/\n\* /g, '<br>- ').trim() || '',
+      'T2DM and/or T1DM excluded?': exclusionCriteriaText.includes('Type 1 diabetes mellitus') ? 'Type 1 diabetes mellitus excluded.' : (exclusionCriteriaText.includes('History of type 1 or type 2 diabetes') ? 'History of type 1 or type 2 diabetes excluded.' : 'Not explicitly stated.'),
+      'History of CV events definition and timing for exclusion': exclusionCriteriaText.match(/Any of the following: myocardial infarction, stroke, hospitalisation for unstable angina pectoris or transient ischaemic attack within the past (\d+ days) prior to the day of screening/)?.[0] ||
+                                                                   exclusionCriteriaText.match(/Acute coronary or cerebro-vascular event within (\d+ days) prior to randomisation/)?.[0] || 'Not explicitly stated.',
+      'Con med exclusion: definition and timing?': exclusionCriteriaText.match(/Treatment with (any glucagon-like peptide-1 receptor agonist|glucose-lowering agents|any dipeptidyl peptidase 4 \(DPP-IV\) inhibitor) within (\d+ days) before screening/g)?.join('<br>') || 'Not explicitly stated.',
+      'Uncontrolled HTN, BP cutoffs': exclusionCriteriaText.match(/Uncontrolled hypertension defined as systolic blood pressure >(\d+) mmHg or diastolic blood pressure >(\d+) mmHg/)?.[0] || 'Not explicitly mentioned.',
+      'NYHA class': exclusionCriteriaText.match(/Chronic heart failure New York Heart Association \(NYHA\) class IV/)?.[0] ||
+                      exclusionCriteriaText.match(/Presently classified as being in New York Heart Association \(NYHA\) Class IV heart failure/)?.[0] || 'Not explicitly stated.',
+      'Liver disease': exclusionCriteriaText.includes('History or presence of chronic pancreatitis') || exclusionCriteriaText.includes('Presence of acute pancreatitis within the past 180 days') ? 'History or presence of chronic pancreatitis and/or acute pancreatitis within the past 180 days prior to screening.' : 'Not explicitly stated.',
+      'CKD eGFR cutoff, dialysis or kidney transplant': exclusionCriteriaText.includes('End stage renal disease or chronic or intermittent haemodialysis or peritoneal dialysis') ? 'End stage renal disease or chronic or intermittent haemodialysis or peritoneal dialysis is an exclusion criterion.' : 'Not explicitly stated.',
+      'Primary Endpoint': outcomesModule?.primaryOutcomes?.[0]?.title || '',
       // Added null check for o.title before calling toLowerCase()
-      "Key Secondary Endpoints": formatOutcomes(
-        outcomesModule?.secondaryOutcomes?.filter(
-          (o) =>
-            o.title &&
-            (o.title.toLowerCase().includes("time to") ||
-              o.title.toLowerCase().includes("first occurrence"))
-        )
-      ),
+      'Key Secondary Endpoints': formatOutcomes(outcomesModule?.secondaryOutcomes?.filter((o: any) => o.title && (o.title.toLowerCase().includes('time to') || o.title.toLowerCase().includes('first occurrence')))),
       // Added null check for o.title before calling toLowerCase()
-      "Other Secondary Endpoints": formatOutcomes(
-        outcomesModule?.secondaryOutcomes?.filter(
-          (o) =>
-            o.title &&
-            !o.title.toLowerCase().includes("time to") &&
-            !o.title.toLowerCase().includes("first occurrence")
-        )
-      ),
-      "Exploratory Endpoints": exploratoryEndpoints, // Updated extraction
-      "Substudies (if available)": substudies, // Updated extraction
-      "Notes/Comments": descriptionModule?.briefSummary || "",
-      "Study ID": identificationModule?.nctId || "",
+      'Other Secondary Endpoints': formatOutcomes(outcomesModule?.secondaryOutcomes?.filter((o: any) => o.title && (!o.title.toLowerCase().includes('time to') && !o.title.toLowerCase().includes('first occurrence')))),
+      'Exploratory Endpoints': exploratoryEndpoints, // Updated extraction
+      'Substudies (if available)': substudies, // Updated extraction
+      'Notes/Comments': descriptionModule?.briefSummary || '',
+      'Study ID': identificationModule?.nctId || ''
     };
 
     return extractedFields;
   }, []);
 
   // Handle file selection
-  const handleFileChange = async (event) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files.length === 0) {
+    if (!files || files.length === 0) {
       setExtractedData([]);
       setSelectedFileNames([]); // Clear selected file names
-      setError("");
+      setError('');
       return;
     }
 
     setLoading(true);
-    setError("");
-    const newExtractedData = [];
-    const newSelectedFileNames = [];
+    setError('');
+    const newExtractedData: ClinicalTrialData[] = [];
+    const newSelectedFileNames: string[] = [];
 
-    for (const file of files) {
+    for (const file of Array.from(files)) { // Convert FileList to Array for easier iteration
       try {
-        const fileContent = await readFileAsText(file);
-        const jsonData = JSON.parse(fileContent);
+        const fileContent: string = await readFileAsText(file);
+        const jsonData: any = JSON.parse(fileContent); // jsonData can be of any structure
         const extractedInfo = extractInfo(jsonData);
         newExtractedData.push({ fileName: file.name, fields: extractedInfo });
         newSelectedFileNames.push(file.name); // Add file name to the list
-      } catch (e) {
+      } catch (e: any) { // Catch error as 'any' to access message property
         console.error(`Error processing file ${file.name}:`, e);
-        setError(
-          (prev) => prev + `Error processing ${file.name}: ${e.message}. `
-        );
+        setError((prev) => prev + `Error processing ${file.name}: ${e.message}. `);
       }
     }
 
@@ -360,19 +223,25 @@ function App() {
   };
 
   // Helper function to read file content as text
-  const readFileAsText = (file) => {
+  const readFileAsText = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target && typeof e.target.result === 'string') {
+          resolve(e.target.result);
+        } else {
+          reject(new Error("Failed to read file as text."));
+        }
+      };
       reader.onerror = (e) => reject(e);
       reader.readAsText(file);
     });
   };
 
   // Handle changes in the multi-select dropdown
-  const handleFieldSelectionChange = (event) => {
+  const handleFieldSelectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const { options } = event.target;
-    const selectedValues = [];
+    const selectedValues: string[] = [];
     for (let i = 0; i < options.length; i++) {
       if (options[i].selected) {
         selectedValues.push(options[i].value);
@@ -384,64 +253,64 @@ function App() {
   // Function to export data to Excel
   const exportToExcel = () => {
     if (extractedData.length === 0) {
-      setError("No data to export. Please upload JSON files first.");
+      setError('No data to export. Please upload JSON files first.');
       return;
     }
 
     // Create a temporary table element to construct the HTML for export
-    const table = document.createElement("table");
-    table.style.width = "100%";
-    table.setAttribute("border", "1");
-    table.setAttribute("cellpadding", "5");
-    table.setAttribute("cellspacing", "0");
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.setAttribute('border', '1');
+    table.setAttribute('cellpadding', '5');
+    table.setAttribute('cellspacing', '0');
 
     // Create table header
-    const thead = document.createElement("thead");
-    const headerRow = document.createElement("tr");
-
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
     // Add "Field" header
-    const fieldHeader = document.createElement("th");
-    fieldHeader.textContent = "Field";
-    fieldHeader.style.backgroundColor = "#e2e8f0"; // Tailwind gray-200
-    fieldHeader.style.padding = "12px 24px";
-    fieldHeader.style.textAlign = "left";
+    const fieldHeader = document.createElement('th');
+    fieldHeader.textContent = 'Field';
+    fieldHeader.style.backgroundColor = '#e2e8f0'; // Tailwind gray-200
+    fieldHeader.style.padding = '12px 24px';
+    fieldHeader.style.textAlign = 'left';
     headerRow.appendChild(fieldHeader);
 
     // Add file names as headers
-    extractedData.forEach((data) => {
-      const th = document.createElement("th");
+    extractedData.forEach((data: ClinicalTrialData) => {
+      const th = document.createElement('th');
       th.textContent = data.fileName;
-      th.style.backgroundColor = "#e2e8f0"; // Tailwind gray-200
-      th.style.padding = "12px 24px";
-      th.style.textAlign = "left";
+      th.style.backgroundColor = '#e2e8f0'; // Tailwind gray-200
+      th.style.padding = '12px 24px';
+      th.style.textAlign = 'left';
       headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
     // Create table body
-    const tbody = document.createElement("tbody");
-    selectedFields.forEach((field) => {
-      const row = document.createElement("tr");
-
+    const tbody = document.createElement('tbody');
+    selectedFields.forEach((field: string) => {
+      const row = document.createElement('tr');
+      
       // Add field name cell
-      const fieldCell = document.createElement("th");
+      const fieldCell = document.createElement('th');
       fieldCell.textContent = field;
-      fieldCell.style.fontWeight = "bold";
-      fieldCell.style.padding = "16px 24px";
-      fieldCell.style.whiteSpace = "nowrap";
-      fieldCell.style.textAlign = "left";
-      fieldCell.style.backgroundColor = "#ffffff"; // Tailwind white
-      fieldCell.style.borderRight = "1px solid #e2e8f0"; // Tailwind gray-200
+      fieldCell.style.fontWeight = 'bold';
+      fieldCell.style.padding = '16px 24px';
+      fieldCell.style.whiteSpace = 'nowrap';
+      fieldCell.style.textAlign = 'left';
+      fieldCell.style.backgroundColor = '#ffffff'; // Tailwind white
+      fieldCell.style.borderRight = '1px solid #e2e8f0'; // Tailwind gray-200
       row.appendChild(fieldCell);
 
       // Add data cells for each file
-      extractedData.forEach((data) => {
-        const td = document.createElement("td");
+      extractedData.forEach((data: ClinicalTrialData) => {
+        const td = document.createElement('td');
         // Use innerHTML to preserve basic formatting (like <br>)
-        td.innerHTML = data.fields[field] || "";
-        td.style.padding = "16px 24px";
-        td.style.borderLeft = "1px solid #e2e8f0"; // Tailwind gray-200
+        td.innerHTML = data.fields[field] || '';
+        td.style.padding = '16px 24px';
+        td.style.borderLeft = '1px solid #e2e8f0'; // Tailwind gray-200
         row.appendChild(td);
       });
       tbody.appendChild(row);
@@ -461,13 +330,13 @@ function App() {
       </body>
       </html>
     `;
-    const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel" });
+    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
 
     // Create a download link and trigger the download
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "clinical_trial_data.xls"; // Use .xls for broader compatibility with HTML content
+    a.download = 'clinical_trial_data.xls'; // Use .xls for broader compatibility with HTML content
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -482,10 +351,7 @@ function App() {
         </h1>
 
         <div className="mb-8 p-4 border border-gray-300 rounded-lg bg-gray-50">
-          <label
-            htmlFor="json-upload"
-            className="block text-lg font-medium text-gray-700 mb-3"
-          >
+          <label htmlFor="json-upload" className="block text-lg font-medium text-gray-700 mb-3">
             Upload JSON Files:
           </label>
           <input
@@ -512,17 +378,13 @@ function App() {
             </div>
           )}
           <p className="mt-2 text-sm text-gray-600">
-            Hold Ctrl (Windows) or Command (Mac) and click to select multiple
-            files. Data will not be saved.
+            Hold Ctrl (Windows) or Command (Mac) and click to select multiple files. Data will not be saved.
           </p>
         </div>
 
         {extractedData.length > 0 && (
           <div className="mb-8 p-4 border border-gray-300 rounded-lg bg-gray-50">
-            <label
-              htmlFor="field-selection"
-              className="block text-lg font-medium text-gray-700 mb-3"
-            >
+            <label htmlFor="field-selection" className="block text-lg font-medium text-gray-700 mb-3">
               Select Fields to Display:
             </label>
             <select
@@ -552,10 +414,7 @@ function App() {
         )}
 
         {error && (
-          <div
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6"
-            role="alert"
-          >
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
             <strong className="font-bold">Error!</strong>
             <span className="block sm:inline ml-2">{error}</span>
           </div>
@@ -576,19 +435,12 @@ function App() {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-200">
                   <tr>
                     {/* First column header is "Field" */}
-                    <th
-                      scope="col"
-                      className="py-3 px-6 sticky left-0 bg-gray-200 z-10 border-r border-gray-300"
-                    >
+                    <th scope="col" className="py-3 px-6 sticky left-0 bg-gray-200 z-10 border-r border-gray-300">
                       Field
                     </th>
                     {/* Subsequent column headers are the file names */}
                     {extractedData.map((data, index) => (
-                      <th
-                        key={index}
-                        scope="col"
-                        className="py-3 px-6 border-l border-gray-300"
-                      >
+                      <th key={index} scope="col" className="py-3 px-6 border-l border-gray-300">
                         {data.fileName}
                       </th>
                     ))}
@@ -597,28 +449,15 @@ function App() {
                 <tbody>
                   {/* Each row represents a selected field */}
                   {selectedFields.map((field, rowIndex) => (
-                    <tr
-                      key={field}
-                      className="bg-white border-b hover:bg-gray-50"
-                    >
+                    <tr key={field} className="bg-white border-b hover:bg-gray-50">
                       {/* First cell in each row is the field name */}
-                      <th
-                        scope="row"
-                        className="py-4 px-6 font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white border-r border-gray-200 z-0"
-                      >
+                      <th scope="row" className="py-4 px-6 font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white border-r border-gray-200 z-0">
                         {field}
                       </th>
                       {/* Subsequent cells contain the data for that field from each file */}
                       {extractedData.map((data, colIndex) => (
-                        <td
-                          key={colIndex}
-                          className="py-4 px-6 border-l border-gray-200"
-                        >
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: data.fields[field] || "",
-                            }}
-                          />
+                        <td key={colIndex} className="py-4 px-6 border-l border-gray-200">
+                          <div dangerouslySetInnerHTML={{ __html: data.fields[field] || '' }} />
                         </td>
                       ))}
                     </tr>
@@ -631,8 +470,7 @@ function App() {
 
         {extractedData.length === 0 && !loading && !error && (
           <p className="text-center text-gray-600 mt-8">
-            Upload JSON files to see the extracted data here. Data will not be
-            saved.
+            Upload JSON files to see the extracted data here. Data will not be saved.
           </p>
         )}
       </div>
