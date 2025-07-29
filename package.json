@@ -2,7 +2,7 @@
   "name": "extractinfo",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://<cclin83>.github.io/<extractinfo>",
+  "homepage": "https://cclin83.github.io/extractinfo",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
